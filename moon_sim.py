@@ -1,5 +1,7 @@
-'''This module was intially created by Zhilei Xu and modified by Michael Brewer for the CLASS experiment.
-If you use this package please cite the related paper (Zhilei Xu et al 2020 ApJ 891 134).
+'''This module was intially created by Zhilei Xu (zhileixu@space.mit.edu) and modified by Michael Brewer 
+for the CLASS experiment. 
+Zhilei adapted the CLASS-specific code for general use. If you use this package please cite the 
+related paper (Zhilei Xu et al 2020 ApJ 891 134).
 '''
 
 import numpy as np
@@ -8,7 +10,6 @@ from scipy.optimize import curve_fit
 from datetime import datetime, timedelta
 import cPickle as pickle
 import ephem
-from moby2.ephem import CLASSEphem
 
 SIG2FWHM = 2.35482
 MEAN_RADIUS = 1737.4 #km
