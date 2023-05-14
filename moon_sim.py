@@ -10,6 +10,7 @@ from scipy.optimize import curve_fit
 from datetime import datetime, timedelta
 import cPickle as pickle
 import ephem
+import time
 
 SIG2FWHM = 2.35482
 MEAN_RADIUS = 1737.4 #km
@@ -19,6 +20,11 @@ MEAN_DISK_BT = {'q_band' : 221.04,
                 'w1_band': 218.04,
                 'gl_band': 215.94,
                 'gh_band': 213.65} 
+
+# Default Site Information (the plateau home to ACT, CLASS, PB, and SO)
+latitude_deg =  -22.9585
+longitude_deg =  -67.7876
+elevation_m =  5188.
 
 # A class to hold data
 class MoonSimData:
@@ -72,7 +78,18 @@ def gauss_map_gen(moon_x, moon_y, fwhm_x=1.5, fwhm_y=1.5, theta=0.0):
 
 class moon_sim:
 
-    def __init__(self, dt=None, recv='q_band', fwhm=1.5, res=0.01, map_size=0.6):
+    def __init__(self, observer=None, dt=None, recv='q_band', fwhm=1.5, res=0.01, map_size=0.6):
+        '''Initialize the moon_sim object
+        Parameters
+        ----------
+        observer: obj
+            observer object from the ephem package with the observer site information
+        dt: obj
+            a datetime object defined from timestamps
+        Return
+        ------    
+        
+        '''
         #Datetime for Moon simulation
         self.dt = dt
         #Receiver
@@ -84,15 +101,31 @@ class moon_sim:
         #Map size (degrees, will be scaled to keep image size constant)
         self.map_size = map_size
         self.map_data = MoonSimData(recv)
-        if dt is not None:
-            #Ephemeris Setup
-            self.ephem = CLASSEphem()
-            self.ephem.site.pressure = 0
-            self.ephem.site.date = dt
-            self.moon = self.ephem.get_object('Moon')
-            self.sun  = self.ephem.get_object('Sun')
-            self.map_data.distance = self.moon.earth_distance * AU
-            self.map_data.radius = np.degrees(MEAN_RADIUS / self.map_data.distance)
+        if observer is None:
+            obs = ephem.Observer()
+            obs.lat = np.radians(latitude_deg)
+            obs.lon = np.radians(longitude_deg)
+            obs.elevation = elevation_m
+            if dt is None:
+                obs.date = datetime.fromtimestamp(time.time())
+            else:
+                obs.date = dt
+            self.obs = obs
+        else:
+            self.obs = observer
+        self.moon = self.ephem.get_object('Moon')
+        self.sun  = self.ephem.get_object('Sun')
+        self.map_data.distance = self.moon.earth_distance * AU
+        self.map_data.radius = np.degrees(MEAN_RADIUS / self.map_data.distance)
+#         if dt is not None:
+#             #Ephemeris Setup
+#             self.ephem = CLASSEphem()
+#             self.ephem.site.pressure = 0
+#             self.ephem.site.date = dt
+#             self.moon = self.ephem.get_object('Moon')
+#             self.sun  = self.ephem.get_object('Sun')
+#             self.map_data.distance = self.moon.earth_distance * AU
+#             self.map_data.radius = np.degrees(MEAN_RADIUS / self.map_data.distance)
 
     def constants(self):
         return self.map_data.mean_bt, self.map_data.ref_radius
